@@ -149,7 +149,7 @@ func (r Room) Loop(){
 }
 
 func main() {
-	d: = []Card{
+	d := []Card{
 		{name:"Princess", rank: 8, description:"princess"},
 		{name:"Countess", rank: 7, description:"countess"},
 		{name:"King", rank: 6, description:"king"},
