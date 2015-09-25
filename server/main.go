@@ -8,44 +8,50 @@ import(
 	"net/http"
 	//"reflect"
 	"encoding/json"
+	
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	
-	
 	//"golang.org/x/net/websocket"
 )
 
+// Card is a struct that holds the information of a card type in the game
 type Card struct{
 	name string
-	rank uint16
+	rank int
 	description string
 }
 
+// Deck is a stack of card (with a defined order).
 type Deck struct{
 	cards Stack
 }
 
+// Hand is all the cards a player currently holds.
 type Hand struct{
 	cards[] Card
 }
 
+// Mgs is the message format passed between client and server.
 type Msg struct{
-	Name string `json:"name"`
-	Type string `json:"type"` // "chat", "turn", "connect", "disconnect"
-	Data string `json:"data"`
+	Name string `json:"name, omitempty"`
+	Type string `json:"type, omitempty"` // "chat", "turn", "connect", "disconnect"
+	Data string `json:"data, omitempty"`
 }
 
+// Room is a manager for a game of loveletters.
 type Room struct{
 	players []Player
 	I chan Msg
 }
 
+// Player is a person that plays a game of loveletters.
 type Player struct{
 	name string
-	score uint8
+	score int
 	O chan string
 }
 
+// Server holds all the information about the loveletter server.
 type Server struct{
 	rooms []Room
 	players []Player
@@ -143,23 +149,24 @@ func (r Room) Loop(){
 }
 
 func main() {
-	var d = []Card{}
-	d = append(d, Card{name:"Princess", rank: 8, description:"princess"})
-	d = append(d, Card{name:"Countess", rank: 7, description:"countess"})
-	d = append(d, Card{name:"King", rank: 6, description:"king"})
-	d = append(d, Card{name:"Prince", rank: 5, description:"prince"})
-	d = append(d, Card{name:"Prince", rank: 5, description:"prince"})
-	d = append(d, Card{name:"Handmaid", rank: 4, description:"priest"})
-	d = append(d, Card{name:"Handmaid", rank: 4, description:"priest"})
-	d = append(d, Card{name:"Baron", rank: 3, description:"baron"})
-	d = append(d, Card{name:"Baron", rank: 3, description:"baron"})
-	d = append(d, Card{name:"Priest", rank: 2, description:"priest"})
-	d = append(d, Card{name:"Priest", rank: 2, description:"priest"})
-	d = append(d, Card{name:"Guard", rank: 1, description:"guard"})
-	d = append(d, Card{name:"Guard", rank: 1, description:"guard"})
-	d = append(d, Card{name:"Guard", rank: 1, description:"guard"})
-	d = append(d, Card{name:"Guard", rank: 1, description:"guard"})
-	d = append(d, Card{name:"Guard", rank: 1, description:"guard"})
+	d: = []Card{
+		{name:"Princess", rank: 8, description:"princess"},
+		{name:"Countess", rank: 7, description:"countess"},
+		{name:"King", rank: 6, description:"king"},
+		{name:"Prince", rank: 5, description:"prince"},
+		{name:"Prince", rank: 5, description:"prince"},
+		{name:"Handmaid", rank: 4, description:"priest"},
+		{name:"Handmaid", rank: 4, description:"priest"},
+		{name:"Baron", rank: 3, description:"baron"},
+		{name:"Baron", rank: 3, description:"baron"},
+		{name:"Priest", rank: 2, description:"priest"},
+		{name:"Priest", rank: 2, description:"priest"},
+		{name:"Guard", rank: 1, description:"guard"},
+		{name:"Guard", rank: 1, description:"guard"},
+		{name:"Guard", rank: 1, description:"guard"},
+		{name:"Guard", rank: 1, description:"guard"},
+		{name:"Guard", rank: 1, description:"guard"},
+	}
 	
 	rand.Seed(time.Now().UTC().UnixNano())
 	
@@ -168,7 +175,7 @@ func main() {
 		d[i], d[j] = d[j], d[i]
 	}
 	
-	var myhand = Hand{}
+	myhand := Hand{}
 	
 	deck := Deck{}
 	
@@ -178,7 +185,7 @@ func main() {
 	
 	fmt.Println(deck.cards.Peek())
 	fmt.Println(myhand)
-	var t = deck.cards.Pop().(Card)
+	t := deck.cards.Pop().(Card)
 	myhand.cards = append(myhand.cards, t)
 	fmt.Println(deck.cards.Peek())
 	fmt.Println(myhand)
@@ -197,7 +204,6 @@ func main() {
 	})
 
 	r.Run("localhost:8080")
-	
 }
 
 var wsupgrader = websocket.Upgrader{
