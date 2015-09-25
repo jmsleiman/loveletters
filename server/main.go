@@ -17,7 +17,7 @@ import(
 // Card is a struct that holds the information of a card type in the game
 type Card struct{
 	name string
-	rank uint16
+	rank int
 	description string
 }
 
