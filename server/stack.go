@@ -1,13 +1,10 @@
 package main
 
-
 import (
   "errors"  
 )
   
 var ErrStackEmpty = errors.New("Stack is empty")  
-
-
 
 // Stack is the data structure representation of the classic stack
 type Stack struct {
