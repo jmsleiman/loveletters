@@ -1,106 +1,170 @@
 <!DOCTYPE html>
+	<head>
+		<meta charset="utf-8" />
+		<title>WebSocket Test</title>
+		
+		<style type="text/css">
+			.clear{
+				clear:both;
+			}
+			
+			#grid{
+				position: absolute;
+				width: 100%;
+				height: 100%;
+			}
+			
+			.grid-element{
+				width:33%;
+				height: 33%;
+				float:left;
+				border-style: dashed;
+				border-width: 1px;
+				background-color: #F3F3A3;
+			}
+			
+			#grid_container {
+				position: relative;
+				width: 100%;
+				padding-bottom: 100%;
+				/* display:none; */
+			}
+			
+			.playing_cards{
+				max-height: 50%;
+			}
+			
+			.heart_token{
+				max-height: 50%;
+			}
+			
+		</style>
 
-<meta charset="utf-8" />
-<title>WebSocket Test</title>
-<script language="javascript" type="text/javascript">
-	var myChannel = window.location.search.replace(/^\?/, '')
-	if (myChannel == '') {
-		// present the default message
-	}
-	else {
-		join(myChannel)
-		// {channel: channel, nick: myNick}
-		// which should also invoke a doConnect
-		// this should be the first message sent
-	}
+		<script language="javascript" type="text/javascript">
+			var myChannel = window.location.search.replace(/^\?/, '')
+			if (myChannel == '') {
+				// present the default message
+				// hide the grid_container div
+			}
+			else {
+				// prompt for a username
+				var myNick = prompt("Please enter your nickname", "Harry Potter");
+				doConnect(myChannel, myNick)
+				// {channel: channel, nick: myNick}
+				// which should also invoke a doConnect
+				// this should be the first message sent
+			}
 
-	function init(){
-		document.myform.url.value = "ws://localhost:8080/ws"
-		document.myform.inputtext.value = "Hello World!"
-		document.myform.disconnectButton.disabled = true;
-	}
+			function init(){
+				document.myform.url.value = "ws://localhost:8080/ws"
+				document.myform.inputtext.value = "Hello World!"
+				document.myform.disconnectButton.disabled = true;
+			}
+			
+			function doConnect(channel, nickname){
+				websocket = new WebSocket(document.myform.url.value);
+				websocket.onopen = function(evt) { onOpen(evt) };
+				websocket.onclose = function(evt) { onClose(evt) };
+				websocket.onmessage = function(evt) { onMessage(evt) };
+				websocket.onerror = function(evt) { onError(evt) };
+				websocket.send( "{channel: " + channel + ", nick: " + nickname +"}" );
+			}
+
+			function onOpen(evt){
+				writeToScreen("connected\n");
+				document.myform.connectButton.disabled = true;
+				document.myform.disconnectButton.disabled = false;
+			}
+
+			function onClose(evt){
+				writeToScreen("disconnected\n");
+				document.myform.connectButton.disabled = false;
+				document.myform.disconnectButton.disabled = true;
+			}
+
+			function onMessage(evt){
+				writeToScreen("response: " + evt.data + '\n');
+			}
+
+			function onError(evt){
+				writeToScreen('error: ' + evt.data + '\n');
+				websocket.close();
+				document.myform.connectButton.disabled = false;
+				document.myform.disconnectButton.disabled = true;
+			}
+
+			function doSend(message){
+				writeToScreen("sent: " + message + '\n'); 
+				websocket.send(message);
+			}
+
+			function writeToScreen(message){
+				document.myform.outputtext.value += "====================\n";
+				document.myform.outputtext.value += message;
+				document.myform.outputtext.scrollTop = document.myform.outputtext.scrollHeight;
+			}
+
+			window.addEventListener("load", init, false);
+
+			function sendText() {
+				doSend( document.myform.inputtext.value );
+			}
+
+			function clearText() {
+				document.myform.outputtext.value = "";
+			}
+
+			function doDisconnect() {
+				websocket.close();
+			}
+			
+			function AlertIt() {
+				var answer = prompt("Please enter your name", "Harry Potter");
+			}
+			
+			</script>
+	</head>
 	
-	function doConnect(){
-		websocket = new WebSocket(document.myform.url.value);
-		websocket.onopen = function(evt) { onOpen(evt) };
-		websocket.onclose = function(evt) { onClose(evt) };
-		websocket.onmessage = function(evt) { onMessage(evt) };
-		websocket.onerror = function(evt) { onError(evt) };
-	}
+	<body>
+		<div id="grid_container">
+		<div id="grid">
+		
+			<div class="grid-element">
+			</div>
+			<div class="grid-element">
+				<img src="./cards/back.png" class="playing_cards"/>
+			</div>
+			<div class="grid-element">
+			</div>
+			
+			
+			
+			<div class="grid-element">
+				<img src="./cards/back.png" class="playing_cards"/>
+			</div>
+			<div class="grid-element">
+				<a href="javascript:AlertIt()"><img src="./cards/back.png" class="playing_cards"/></a>
+				<img src="./cards/heart.png" class="point_tokens"/>
+			</div>
+			<div class="grid-element">
+				<img src="./cards/back.png" class="playing_cards"/>
+			</div>
+			
+			
+			<div class="grid-element">
+			</div>
+			<div class="grid-element">
+				<img src="./cards/2_of_diamonds.png" class="playing_cards"/>
+				<img src="./cards/2_of_hearts.png" class="playing_cards"/>
+			</div>
+			<div class="grid-element">
+			</div>
+		
+		</div>
+		</div>
 
-	function onOpen(evt){
-		writeToScreen("connected\n");
-		document.myform.connectButton.disabled = true;
-		document.myform.disconnectButton.disabled = false;
-	}
 
-	function onClose(evt){
-		writeToScreen("disconnected\n");
-		document.myform.connectButton.disabled = false;
-		document.myform.disconnectButton.disabled = true;
-	}
-
-	function onMessage(evt){
-		writeToScreen("response: " + evt.data + '\n');
-	}
-
-	function onError(evt){
-		writeToScreen('error: ' + evt.data + '\n');
-		websocket.close();
-		document.myform.connectButton.disabled = false;
-		document.myform.disconnectButton.disabled = true;
-	}
-
-	function doSend(message){
-		writeToScreen("sent: " + message + '\n'); 
-		websocket.send(message);
-	}
-
-	function writeToScreen(message){
-		document.myform.outputtext.value += "====================\n";
-		document.myform.outputtext.value += message;
-		document.myform.outputtext.scrollTop = document.myform.outputtext.scrollHeight;
-	}
-
-	window.addEventListener("load", init, false);
-
-	function sendText() {
-		doSend( document.myform.inputtext.value );
-	}
-
-	function clearText() {
-		document.myform.outputtext.value = "";
-	}
-
-	function doDisconnect() {
-		websocket.close();
-	}
+</body>
 	
-	
-	
-	
-
-</script>
-	<div id="output"></div>
-
-	<form name="myform">
-		<p>
-			<textarea name="outputtext" rows="20" cols="50"></textarea>
-		</p>
-		<p>
-			<textarea name="inputtext" cols="50"></textarea>
-		</p>
-		<p>
-			<textarea name="url" cols="50"></textarea>
-		</p>
-		<p>
-			<input type="button" name=sendButton value="Send" onClick="sendText();">
-			<input type="button" name=clearButton value="Clear" onClick="clearText();">
-			<input type="button" name=disconnectButton value="Disconnect" onClick="doDisconnect();">
-			<input type="button" name=connectButton value="Connect" onClick="doConnect();">
-		</p>
-
-
-</form>
 </html> 
 

@@ -2,59 +2,37 @@ package main
 
 import(
 	"fmt"
-	"math/rand"
-	"time"
-	//"io"
 	"net/http"
-	//"reflect"
 	"encoding/json"
-	
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	//"golang.org/x/net/websocket"
+	//"io"
+	//"reflect"
 )
-
-// Card is a struct that holds the information of a card type in the game
-type Card struct{
-	name string
-	rank int
-	description string
-}
-
-// Deck is a stack of card (with a defined order).
-type Deck struct{
-	cards Stack
-}
-
-// Hand is all the cards a player currently holds.
-type Hand struct{
-	cards[] Card
-}
 
 // Mgs is the message format passed between client and server.
 type Msg struct{
-	Name string `json:"name, omitempty"`
-	Type string `json:"type, omitempty"` // "chat", "turn", "connect", "disconnect"
-	Data string `json:"data, omitempty"`
+	Name string `json:"name"`
+	Type string `json:"type"` // "chat", "turn", "connect", "disconnect"
+	Data string `json:"data"`
 }
 
 // Room is a manager for a game of loveletters.
 type Room struct{
-	players []Player
+	players []PlayerConnection
 	I chan Msg
 }
 
-// Player is a person that plays a game of loveletters.
-type Player struct{
-	name string
-	score int
+type PlayerConnection struct{
 	O chan string
+	player Player
 }
 
 // Server holds all the information about the loveletter server.
 type Server struct{
 	rooms []Room
-	players []Player
+	players []PlayerConnection
 }
 
 func (s *Server) handle(c *gin.Context) {
@@ -67,8 +45,23 @@ func (s *Server) findSuitableRoom() Room{
 }
 
 func (s *Server) wshandler(w http.ResponseWriter, r *http.Request) {
-	// so at this point we can have some fun, yeah
+	conn, err := wsupgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println("Failed to set websocket upgrade: %+v", err)
+		return
+	}
 	
+	// so at this point we can have some fun, yeah
+	fmt.Println("Expecting a message...")
+	_, msg, err := conn.ReadMessage()
+	
+	res := Msg{}
+	
+	json.Unmarshal(msg, &res)
+	
+	fmt.Println(err)
+	fmt.Println(res)
+	fmt.Println(res.Name)
 	
 	// maybe take in a message at this point?
 	// grab the room and grab the user id?
@@ -79,14 +72,8 @@ func (s *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 	// if you have to create a room, make sure to give it an I:
 	// I := make(chan string) // unbuffered channels
 	
-	player := Player{}
+	player := PlayerConnection{}
 	s.players = append(s.players, player)
-	
-	conn, err := wsupgrader.Upgrade(w, r, nil)
-	if err != nil {
-		fmt.Println("Failed to set websocket upgrade: %+v", err)
-		return
-	}
 	
 	//make new channels
 	O := make(chan string) // more of a basket than a tube
@@ -122,6 +109,7 @@ func (s *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 	// and make them shut when the players start playing?
 	
 	room.players = append(room.players, player)
+	
 }
 
 // Loop does the game loop
@@ -131,7 +119,7 @@ func (r Room) Loop(){
 	for m := range r.I{//m is a Msg
 		switch m.Type{
 			case "turn":
-				if m.Name == r.players[currentplayer].name{
+				if m.Name == r.players[currentplayer].player.name{
 					fmt.Println("uhhhh")
 				}
 			case "chat":
@@ -149,59 +137,20 @@ func (r Room) Loop(){
 }
 
 func main() {
-	d := []Card{
-		{name:"Princess", rank: 8, description:"princess"},
-		{name:"Countess", rank: 7, description:"countess"},
-		{name:"King", rank: 6, description:"king"},
-		{name:"Prince", rank: 5, description:"prince"},
-		{name:"Prince", rank: 5, description:"prince"},
-		{name:"Handmaid", rank: 4, description:"priest"},
-		{name:"Handmaid", rank: 4, description:"priest"},
-		{name:"Baron", rank: 3, description:"baron"},
-		{name:"Baron", rank: 3, description:"baron"},
-		{name:"Priest", rank: 2, description:"priest"},
-		{name:"Priest", rank: 2, description:"priest"},
-		{name:"Guard", rank: 1, description:"guard"},
-		{name:"Guard", rank: 1, description:"guard"},
-		{name:"Guard", rank: 1, description:"guard"},
-		{name:"Guard", rank: 1, description:"guard"},
-		{name:"Guard", rank: 1, description:"guard"},
-	}
-	
-	rand.Seed(time.Now().UTC().UnixNano())
-	
-	for i := range d {
-		j := rand.Intn(i + 1)
-		d[i], d[j] = d[j], d[i]
-	}
-	
-	myhand := Hand{}
-	
-	deck := Deck{}
-	
-	for i := 0; i < len(d); i++{
-		deck.cards.Push(d[i])
-	}
-	
-	fmt.Println(deck.cards.Peek())
-	fmt.Println(myhand)
-	t := deck.cards.Pop().(Card)
-	myhand.cards = append(myhand.cards, t)
-	fmt.Println(deck.cards.Peek())
-	fmt.Println(myhand)
-	
 	server := Server{}
 	
 	r := gin.Default()
-	r.LoadHTMLFiles("index.html")
+	r.LoadHTMLFiles("index_debug.html")
 
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(200, "index.html", nil)
+		c.HTML(200, "index_debug.html", nil)
 	})
 
 	r.GET("/ws", func(c *gin.Context) {
 		server.wshandler(c.Writer, c.Request)
 	})
+	
+	// we also need to figure out how to loop the game itself, so...
 
 	r.Run("localhost:8080")
 }
