@@ -1,5 +1,7 @@
 package main
 
+import "errors"
+
 type Stack struct {
 	top *Node
 	size int
@@ -27,11 +29,12 @@ func (s *Stack) Peek() interface{} {
 	return s.top.value
 }
 
-func (s *Stack) Pop() (val interface{}) {
+func (s *Stack) Pop() (val interface{}, err error) {
 	if s.size > 0 {
 		val, s.top = s.top.value, s.top.next
 		s.size--
-		return
+		return val, nil
+	}else{
+		return val, errors.New("Stack is empty")
 	}
-	return ""
 }
